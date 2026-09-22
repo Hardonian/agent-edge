@@ -1,0 +1,76 @@
+package config
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestPlatformDefaultsNormalize(t *testing.T) {
+	cfg := Default()
+	cfg.Platform = PlatformConfig{}
+	if err := normalize(&cfg); err != nil {
+		t.Fatalf("normalize: %v", err)
+	}
+	if cfg.Platform.Mode != "self_hosted" {
+		t.Fatalf("expected self_hosted mode, got %q", cfg.Platform.Mode)
+	}
+	if cfg.Platform.EventBus.Provider == "" {
+		t.Fatalf("expected event bus provider default")
+	}
+	if cfg.Platform.Inference.Budget.MaxContextTokens <= 0 {
+		t.Fatalf("expected inference budget defaults")
+	}
+}
+
+func TestPlatformValidationRejectsHiddenTelemetry(t *testing.T) {
+	cfg := Default()
+	cfg.Platform.Telemetry.Enabled = true
+	cfg.Platform.Telemetry.AllowOutbound = false
+	err := Validate(cfg)
+	if err == nil || !strings.Contains(err.Error(), "allow_outbound") {
+		t.Fatalf("expected allow_outbound validation error, got %v", err)
+	}
+}
+
+func TestPlatformValidationRequiresExplicitTelemetryOptIn(t *testing.T) {
+	cfg := Default()
+	cfg.Platform.Telemetry.Enabled = true
+	cfg.Platform.Telemetry.AllowOutbound = true
+	cfg.Platform.Telemetry.RequireExplicit = false
+	err := Validate(cfg)
+	if err == nil || !strings.Contains(err.Error(), "require_explicit_opt_in") {
+		t.Fatalf("expected explicit opt-in validation error, got %v", err)
+	}
+}
+
+func TestPlatformValidationRequiresInferenceProvider(t *testing.T) {
+	cfg := Default()
+	cfg.Platform.Inference.Enabled = true
+	cfg.Platform.Inference.DefaultProvider = "ollama"
+	cfg.Platform.Inference.Ollama.Enabled = false
+	err := Validate(cfg)
+	if err == nil || !strings.Contains(err.Error(), "default_provider=ollama") {
+		t.Fatalf("expected ollama provider validation error, got %v", err)
+	}
+}
+
+func TestPlatformValidationRequiresConfiguredInferenceRuntimeWhenEnabled(t *testing.T) {
+	cfg := Default()
+	cfg.Platform.Inference.Enabled = true
+	cfg.Platform.Inference.DefaultProvider = "mixed"
+	cfg.Platform.Inference.Ollama.Enabled = false
+	cfg.Platform.Inference.LlamaCPP.Enabled = false
+	err := Validate(cfg)
+	if err == nil || !strings.Contains(err.Error(), "at least one configured runtime provider") {
+		t.Fatalf("expected configured inference provider validation error, got %v", err)
+	}
+}
+
+func TestPlatformValidationRejectsInvalidInferenceBudget(t *testing.T) {
+	cfg := Default()
+	cfg.Platform.Inference.Budget.MaxContextTokens = 128
+	err := Validate(cfg)
+	if err == nil || !strings.Contains(err.Error(), "max_context_tokens") {
+		t.Fatalf("expected max_context_tokens validation error, got %v", err)
+	}
+}

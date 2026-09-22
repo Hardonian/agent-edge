@@ -1,0 +1,474 @@
+package web
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/mel-project/mel/internal/topology"
+)
+
+// topologyStore is set during wiring from the service layer.
+var topologyStoreGlobal *topology.Store
+
+// SetTopologyStore wires the topology store into the web handlers.
+func (s *Server) SetTopologyStore(ts *topology.Store) {
+	topologyStoreGlobal = ts
+}
+
+func (s *Server) topologyThresholds() topology.StaleThresholds {
+	return topology.StaleThresholdsFromConfig(s.cfg.Topology.NodeStaleMinutes, s.cfg.Topology.LinkStaleMinutes)
+}
+
+func (s *Server) topologyTransportConnected() bool {
+	if s.topologyTransportLive != nil {
+		return s.topologyTransportLive()
+	}
+	for _, h := range s.transportHealth() {
+		if h.State == "live" || h.State == "idle" {
+			return true
+		}
+	}
+	return false
+}
+
+// topologyIntelligenceHandler GET /api/v1/topology — summary + full analysis (bounded).
+func (s *Server) topologyIntelligenceHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	if !s.cfg.Topology.Enabled {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"topology_enabled": false,
+			"message":          "topology model disabled in config",
+		})
+		return
+	}
+	nodes, err := topologyStoreGlobal.ListNodes(5000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load nodes"})
+		return
+	}
+	links, err := topologyStoreGlobal.ListLinks(10000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load links"})
+		return
+	}
+	th := s.topologyThresholds()
+	ar := topology.Analyze(nodes, links, th, time.Now().UTC())
+	now := time.Now().UTC()
+	view := topology.BuildIntelligenceView(s.cfg, ar, s.topologyTransportConnected(), now)
+	if ga, _ := view["google_maps_basemap_available"].(bool); ga {
+		envName := s.cfg.Features.GoogleMapsAPIKeyEnv
+		if envName != "" {
+			// Key is sent to the browser for Google Maps JS loader. Only enable on trusted networks
+			// or with auth; anyone who can GET /api/v1/topology receives it when this flag is on.
+			view["google_maps_api_key"] = strings.TrimSpace(os.Getenv(envName))
+		}
+	}
+	mi := s.meshIntelBundle(now)
+	if mi.AssessmentID != "" {
+		view["mesh_intelligence"] = mi
+	}
+	writeJSON(w, http.StatusOK, view)
+}
+
+// --- Topology nodes with health scoring ---
+
+func (s *Server) topologyNodesHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	limit := intParam(r, "limit", 500)
+	nodes, err := topologyStoreGlobal.ListNodes(limit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to list nodes", "detail": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"nodes": nodes,
+		"count": len(nodes),
+		"limit": limit,
+	})
+}
+
+func (s *Server) topologyNodeDetailHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	// Extract node_num from path: /api/v1/topology/nodes/{num}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/topology/nodes/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "node_num required"})
+		return
+	}
+	nodeNum, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid node_num"})
+		return
+	}
+
+	node, found, err := topologyStoreGlobal.GetNode(nodeNum)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to get node"})
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": "node not found"})
+		return
+	}
+
+	// Get connected links
+	links, _ := topologyStoreGlobal.LinksForNode(nodeNum)
+
+	// Get recent observations
+	observations, _ := topologyStoreGlobal.RecentObservations(nodeNum, 50)
+
+	// Get bookmarks
+	bookmarks, _ := topologyStoreGlobal.BookmarksForNode(nodeNum)
+
+	th := s.topologyThresholds()
+	now := time.Now().UTC()
+	drill := topology.BuildNodeDrilldown(node, links, bookmarks, observations, th, now)
+	if ni := findNodeIntel(s.meshIntelBundle(now), nodeNum); ni != nil {
+		drill.MeshIntel = ni
+	}
+	writeJSON(w, http.StatusOK, drill)
+}
+
+// --- Topology links ---
+
+func (s *Server) topologyLinksHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	limit := intParam(r, "limit", 500)
+	links, err := topologyStoreGlobal.ListLinks(limit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to list links"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"links": links,
+		"count": len(links),
+		"limit": limit,
+	})
+}
+
+// --- Topology analysis ---
+
+func (s *Server) topologyAnalysisHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	nodes, err := topologyStoreGlobal.ListNodes(5000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load nodes"})
+		return
+	}
+	links, err := topologyStoreGlobal.ListLinks(10000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load links"})
+		return
+	}
+	th := s.topologyThresholds()
+	result := topology.Analyze(nodes, links, th, time.Now().UTC())
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (s *Server) topologyLinkDetailHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	edgeID := strings.TrimPrefix(r.URL.Path, "/api/v1/topology/links/")
+	edgeID = strings.Trim(edgeID, "/")
+	if edgeID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "edge_id required"})
+		return
+	}
+	l, ok, err := topologyStoreGlobal.GetLink(edgeID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load link"})
+		return
+	}
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": "link not found"})
+		return
+	}
+	th := s.topologyThresholds()
+	drill := topology.BuildLinkDrilldown(l, th, time.Now().UTC())
+	writeJSON(w, http.StatusOK, drill)
+}
+
+func (s *Server) topologySegmentHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/topology/segments/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "segment id required"})
+		return
+	}
+	segID := parts[0]
+	nodes, err := topologyStoreGlobal.ListNodes(5000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load nodes"})
+		return
+	}
+	links, err := topologyStoreGlobal.ListLinks(10000)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load links"})
+		return
+	}
+	th := s.topologyThresholds()
+	ar := topology.Analyze(nodes, links, th, time.Now().UTC())
+	dd, ok := topology.BuildClusterDrilldown(segID, ar.WeakClusters, ar.Clusters)
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": "segment not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, dd)
+}
+
+// --- Topology snapshots ---
+
+func (s *Server) topologySnapshotsHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	limit := intParam(r, "limit", 20)
+	snapshots, err := topologyStoreGlobal.RecentSnapshots(limit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load snapshots"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"snapshots": snapshots,
+		"count":     len(snapshots),
+	})
+}
+
+// --- Source trust ---
+
+func (s *Server) sourceTrustHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	trusts, err := topologyStoreGlobal.ListSourceTrust()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load source trust"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"sources": trusts,
+		"count":   len(trusts),
+	})
+}
+
+// --- Bookmarks ---
+
+func (s *Server) bookmarksHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		bmType := r.URL.Query().Get("type")
+		limit := intParam(r, "limit", 100)
+		bookmarks, err := topologyStoreGlobal.ListBookmarks(bmType, limit)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to list bookmarks"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"bookmarks": bookmarks, "count": len(bookmarks)})
+
+	case http.MethodPost:
+		var bm topology.Bookmark
+		if err := json.NewDecoder(r.Body).Decode(&bm); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid request body"})
+			return
+		}
+		if bm.NodeNum == 0 || bm.BookmarkType == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "node_num and bookmark_type required"})
+			return
+		}
+		if bm.ActorID == "" {
+			bm.ActorID = "operator"
+		}
+		bm.Active = true
+		if err := topologyStoreGlobal.UpsertBookmark(bm); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to save bookmark"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "bookmark": bm})
+
+	case http.MethodDelete:
+		if !s.cfg.Platform.Retention.AllowDelete {
+			writeJSON(w, http.StatusForbidden, map[string]any{"error": "delete disabled by policy", "detail": "platform.retention.allow_delete=false"})
+			return
+		}
+		nodeNumStr := r.URL.Query().Get("node_num")
+		bmType := r.URL.Query().Get("type")
+		if nodeNumStr == "" || bmType == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "node_num and type required"})
+			return
+		}
+		nodeNum, err := strconv.ParseInt(nodeNumStr, 10, 64)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid node_num"})
+			return
+		}
+		if err := topologyStoreGlobal.DeleteBookmark(nodeNum, bmType); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to delete bookmark"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"status": "deleted"})
+	}
+}
+
+// --- Recovery state ---
+
+func (s *Server) recoveryStateHandler(w http.ResponseWriter, r *http.Request) {
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	rs, err := topologyStoreGlobal.GetRecoveryState()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load recovery state"})
+		return
+	}
+	writeJSON(w, http.StatusOK, rs)
+}
+
+// --- Topology export ---
+
+func (s *Server) topologyExportHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.cfg.Platform.Retention.AllowExport {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "export disabled by policy", "detail": "platform.retention.allow_export=false"})
+		return
+	}
+	if topologyStoreGlobal == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "topology store not initialized"})
+		return
+	}
+	const (
+		defaultNodeLimit     = 1000
+		defaultLinkLimit     = 2000
+		defaultBookmarkLimit = 500
+		defaultSnapshotLimit = 20
+		maxNodeLimit         = 5000
+		maxLinkLimit         = 10000
+		maxBookmarkLimit     = 2000
+		maxSnapshotLimit     = 100
+	)
+	requestedNodeLimit := intParam(r, "node_limit", defaultNodeLimit)
+	requestedLinkLimit := intParam(r, "link_limit", defaultLinkLimit)
+	requestedBookmarkLimit := intParam(r, "bookmark_limit", defaultBookmarkLimit)
+	requestedSnapshotLimit := intParam(r, "snapshot_limit", defaultSnapshotLimit)
+	nodeLimit := clampInt(requestedNodeLimit, 1, maxNodeLimit)
+	linkLimit := clampInt(requestedLinkLimit, 1, maxLinkLimit)
+	bookmarkLimit := clampInt(requestedBookmarkLimit, 1, maxBookmarkLimit)
+	snapshotLimit := clampInt(requestedSnapshotLimit, 1, maxSnapshotLimit)
+
+	nodes, err := topologyStoreGlobal.ListNodes(nodeLimit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load topology nodes"})
+		return
+	}
+	links, err := topologyStoreGlobal.ListLinks(linkLimit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load topology links"})
+		return
+	}
+	trusts, err := topologyStoreGlobal.ListSourceTrust()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load topology source trust"})
+		return
+	}
+	bookmarks, err := topologyStoreGlobal.ListBookmarks("", bookmarkLimit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load topology bookmarks"})
+		return
+	}
+	snapshots, err := topologyStoreGlobal.RecentSnapshots(snapshotLimit)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to load topology snapshots"})
+		return
+	}
+
+	// Redact coordinates if privacy requires it
+	if s.cfg.Privacy.RedactExports {
+		for i := range nodes {
+			nodes[i].LatRedacted = 0
+			nodes[i].LonRedacted = 0
+			nodes[i].LocationState = topology.LocRedacted
+		}
+	}
+
+	bundle := map[string]any{
+		"version":          "mel-topology-export-v1",
+		"exported_at":      time.Now().UTC().Format(time.RFC3339),
+		"privacy_redacted": s.cfg.Privacy.RedactExports,
+		"nodes":            nodes,
+		"links":            links,
+		"sources":          trusts,
+		"bookmarks":        bookmarks,
+		"snapshots":        snapshots,
+		"node_count":       len(nodes),
+		"link_count":       len(links),
+		"export_partial":   len(nodes) >= nodeLimit || len(links) >= linkLimit || len(bookmarks) >= bookmarkLimit || len(snapshots) >= snapshotLimit,
+		"export_limits": map[string]any{
+			"node_limit":          nodeLimit,
+			"link_limit":          linkLimit,
+			"bookmark_limit":      bookmarkLimit,
+			"snapshot_limit":      snapshotLimit,
+			"nodes_truncated":     len(nodes) >= nodeLimit,
+			"links_truncated":     len(links) >= linkLimit,
+			"bookmarks_truncated": len(bookmarks) >= bookmarkLimit,
+			"snapshots_truncated": len(snapshots) >= snapshotLimit,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=mel-topology-%s.json", time.Now().UTC().Format("20060102-150405")))
+	json.NewEncoder(w).Encode(bundle)
+}
+
+func clampInt(v, min, max int) int {
+	if v < min {
+		return min
+	}
+	if v > max {
+		return max
+	}
+	return v
+}
+
+// intParam parses an integer query parameter with a default.
+func intParam(r *http.Request, name string, def int) int {
+	v := r.URL.Query().Get(name)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return def
+	}
+	return n
+}

@@ -1,0 +1,214 @@
+import { useNodes } from '@/hooks/useApi'
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { StatCard } from '@/components/ui/StatCard'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { MelPanel } from '@/components/ui/operator'
+import { DataTable } from '@/components/ui/DataTable'
+import { Badge } from '@/components/ui/Badge'
+import { AlertCard } from '@/components/ui/AlertCard'
+import { OperatorEmptyState } from '@/components/states/OperatorEmptyState'
+import { StaleDataBanner } from '@/components/states/StaleDataBanner'
+import { formatRelativeTime, NodeInfo } from '@/types/api'
+import { Radio, Clock, MapPin } from 'lucide-react'
+
+export function Nodes() {
+  const { data, loading, error, refresh } = useNodes()
+
+  if (loading && !data) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Nodes"
+          subtitle="Mesh operations cockpit"
+          description="Inventory from ingest on this instance — same evidence and timing semantics as the API."
+        />
+        <MelPanel className="overflow-hidden">
+          <CardHeader className="border-b border-border/50 px-4 pt-4">
+            <CardTitle>Node inventory</CardTitle>
+            <CardDescription>Devices last seen via ingest on this instance</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-5 px-4 pb-4">
+            <DataTable<NodeInfo>
+              data={[]}
+              columns={[
+                { key: 'name', header: 'Node' },
+                { key: 'node_id', header: 'ID' },
+                { key: 'last_seen', header: 'Last Seen' },
+                { key: 'last_gateway_id', header: 'Gateway' },
+              ]}
+              keyField="node_id"
+              isLoading={true}
+            />
+          </CardContent>
+        </MelPanel>
+      </div>
+    )
+  }
+
+  if (error && !data) {
+    return (
+      <div className="p-8">
+        <AlertCard
+          variant="critical"
+          title="Unable to load nodes"
+          description={error}
+          action={
+            <button
+              onClick={refresh}
+              className="button-danger"
+            >
+              Retry
+            </button>
+          }
+        />
+      </div>
+    )
+  }
+
+  const nodes = data || []
+
+  const newestLastSeen = nodes.reduce((max, node) => {
+    if (!node.last_seen) return max
+    const t = new Date(node.last_seen).getTime()
+    return t > max ? t : max
+  }, 0)
+  const staleTimestamp = newestLastSeen ? new Date(newestLastSeen).toISOString() : undefined
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Nodes"
+        subtitle="Mesh operations cockpit"
+        description="Inventory from ingest evidence on this gateway. Last-seen and gateway fields are observed telemetry, not live topology or routing proof."
+        action={<Badge variant="outline">{nodes.length} total</Badge>}
+      />
+
+      <StaleDataBanner lastSuccessfulIngest={staleTimestamp} componentName="Node Inventory" />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Total Nodes"
+          value={nodes.length}
+          description="Devices observed on the mesh"
+          icon={<Radio className="h-4 w-4" />}
+          variant="default"
+          rhythm="console"
+        />
+        <StatCard
+          title="Recently Active"
+          value={nodes.filter((n) => {
+            const lastSeen = n.last_seen ? new Date(n.last_seen) : null
+            if (!lastSeen) return false
+            const hourAgo = new Date(Date.now() - 60 * 60 * 1000)
+            return lastSeen > hourAgo
+          }).length}
+          description="Active in the last hour"
+          icon={<Clock className="h-4 w-4" />}
+          variant="success"
+          rhythm="console"
+        />
+        <StatCard
+          title="Known Gateways"
+          value={new Set(nodes.filter((n) => n.last_gateway_id).map((n) => n.last_gateway_id)).size}
+          description="Unique gateway nodes"
+          icon={<MapPin className="h-4 w-4" />}
+          variant="info"
+          rhythm="console"
+        />
+      </div>
+
+      <MelPanel className="overflow-hidden">
+        <CardHeader className="border-b border-border/50 pb-4 px-4 pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Node inventory</CardTitle>
+              <CardDescription className="mt-1">
+                Rows reflect stored observations from your transports, not inferred roles or coverage.
+              </CardDescription>
+            </div>
+            <Badge variant="outline">{nodes.length} total</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-5 px-4 pb-4">
+          {nodes.length === 0 ? (
+            <OperatorEmptyState title="No nodes yet" description="Node rows appear after ingest stores observations for this view. Idle transports or filters produce an empty list." />
+          ) : (
+            <DataTable<NodeInfo>
+              data={nodes}
+              columns={[
+                {
+                  key: 'name',
+                  header: 'Node',
+                  render: (node) => (
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-secondary text-secondary-foreground">
+                        <Radio className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{node.long_name || 'Unknown Node'}</p>
+                        <p className="truncate text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                          {node.short_name || 'Unnamed'}
+                        </p>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'id',
+                  header: 'ID',
+                  render: (node) => (
+                    <code className="raw-block inline-flex px-2 py-1 text-xs font-mono text-foreground">
+                      {node.node_id}
+                    </code>
+                  ),
+                },
+                {
+                  key: 'last_seen',
+                  header: 'Last Seen',
+                  render: (node) => (
+                    <div className="flex items-center gap-2 text-sm text-foreground">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      {formatRelativeTime(node.last_seen)}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'gateway_id',
+                  header: 'Gateway',
+                  render: (node) => (
+                    <div className="flex items-center gap-2">
+                      {node.last_gateway_id ? (
+                        <>
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                          <code className="font-mono text-xs text-foreground">{node.last_gateway_id}</code>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'user',
+                  header: 'User Info',
+                  render: (node) => (
+                    node.user ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs text-foreground">{node.user.hw_model || 'Unknown hardware'}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )
+                  ),
+                },
+              ]}
+              keyField="node_id"
+              emptyMessage="No nodes in this slice"
+              emptyDescription="Nothing matches the current filter or window."
+            />
+          )}
+        </CardContent>
+      </MelPanel>
+    </div>
+  )
+}

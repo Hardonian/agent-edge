@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Start here (run MEL, evaluate, contribute)
+    url: https://github.com/Hardonian/MEL-MeshEdgeLayer/blob/main/README.md
+    about: One-page path for first run, truth boundaries, and contributor entry points.
+  - name: Docs hub (single routing layer)
+    url: https://github.com/Hardonian/MEL-MeshEdgeLayer/blob/main/docs/README.md
+    about: Canonical newcomer funnel and curated docs navigation.
+  - name: Security report (private)
+    url: https://github.com/Hardonian/MEL-MeshEdgeLayer/security/advisories/new
+    about: Report vulnerabilities privately. Do not post secrets or sensitive locations in public issues.

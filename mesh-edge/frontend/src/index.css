@@ -1,0 +1,893 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * MEL console signification (design contract)
+ * ─────────────────────────────────────────
+ * --neon / signal-live: selection, primary actions, OK / connected emphasis
+ * --neon-alt / signal-observed: packet-derived / telemetry / “what ingest showed”
+ * --neon-hot / signal-critical: stop-the-line / error attention
+ * --neon-warn / signal-degraded: warning / partial / needs review
+ * signal-inferred: model-assisted or graph-inferred (non-direct evidence)
+ * signal-stale: aged or low-confidence recency
+ * signal-frozen: paused / static / unknown bucket in topology legend
+ * signal-unsupported: capability not available (e.g. HTTP/BLE ingest)
+ * signal-topology-isolated: graph-isolated role (not “purple = cool”)
+ * mel-grid-bg / mel-topology-svg grid: operational map / live surface
+ * font-mono / font-data: IDs, metrics, timestamps, control labels
+ * surface-panel + top gradient: standard MEL panel chrome
+ */
+
+@layer base {
+  /**
+   * MEL operator console tokens
+   * --neon* = primary UI accent (live / selection / OK path)
+   * --neon-alt = observed / telemetry / packet-derived emphasis
+   * --neon-hot = critical / error attention
+   * --neon-warn = warning / degraded attention
+   * --signal-* = semantic truth-layer colors (prefer in new code)
+   */
+  :root {
+    --background: 0 0% 97%;
+    --foreground: 222 18% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 18% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 18% 14%;
+    --primary: 160 84% 38%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 222 18% 14%;
+    --muted: 220 12% 94%;
+    --muted-foreground: 220 9% 40%;
+    --accent: 220 12% 93%;
+    --accent-foreground: 222 18% 14%;
+    --destructive: 0 72% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 84%;
+    --input: 220 13% 88%;
+    --ring: 160 84% 38%;
+    --radius: 2px;
+    --success: 160 84% 36%;
+    --warning: 38 92% 48%;
+    --critical: 0 84% 52%;
+    --info: 199 88% 48%;
+    --info-foreground: 0 0% 4%;
+    --observed: 199 88% 44%;
+    --inferred: 265 55% 52%;
+    --stale: 220 8% 48%;
+    --frozen: 210 28% 46%;
+    --active: 160 84% 38%;
+    --degraded: 38 88% 48%;
+    --unsupported: 220 6% 42%;
+    --panel: 0 0% 100%;
+    --panel-muted: 220 14% 97%;
+    --panel-strong: 220 12% 95%;
+    --panel-border: 220 13% 82%;
+    --panel-glow: 160 84% 38%;
+    --panel-warm: 38 92% 52%;
+    --shell-shadow: 0 0% 20%;
+    --chrome-bg: 220 14% 96%;
+    --chrome-border: 220 13% 84%;
+    --nav-active: 160 84% 38%;
+    --neon: 160 78% 42%;
+    --neon-alt: 199 90% 48%;
+    --neon-hot: 0 84% 52%;
+    --neon-warn: 38 92% 48%;
+    --signal-live: 160 78% 42%;
+    --signal-observed: 199 90% 48%;
+    --signal-inferred: 265 55% 52%;
+    --signal-stale: 220 8% 48%;
+    --signal-degraded: 38 88% 48%;
+    --signal-critical: 0 84% 52%;
+    --signal-frozen: 210 28% 46%;
+    --signal-unsupported: 220 6% 42%;
+    --signal-complete: 160 78% 38%;
+    --signal-partial: 38 82% 46%;
+    --signal-topology-isolated: 265 50% 52%;
+  }
+
+  .dark {
+    --background: 222 24% 5%;
+    --foreground: 160 12% 88%;
+    --card: 222 22% 7%;
+    --card-foreground: 160 12% 88%;
+    --popover: 222 22% 8%;
+    --popover-foreground: 160 12% 88%;
+    --primary: 160 72% 48%;
+    --primary-foreground: 222 24% 4%;
+    --secondary: 222 18% 11%;
+    --secondary-foreground: 160 12% 88%;
+    --muted: 222 16% 9%;
+    --muted-foreground: 160 10% 58%;
+    --accent: 222 18% 11%;
+    --accent-foreground: 160 12% 88%;
+    --destructive: 0 72% 54%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 160 14% 16%;
+    --input: 222 18% 10%;
+    --ring: 160 72% 48%;
+    --success: 160 70% 48%;
+    --warning: 38 92% 54%;
+    --critical: 0 72% 56%;
+    --info: 199 85% 55%;
+    --info-foreground: 222 24% 4%;
+    --observed: 199 85% 55%;
+    --inferred: 265 50% 62%;
+    --stale: 220 10% 46%;
+    --frozen: 210 22% 48%;
+    --active: 160 70% 48%;
+    --degraded: 38 88% 54%;
+    --unsupported: 220 8% 38%;
+    --panel: 222 22% 7%;
+    --panel-muted: 222 24% 4%;
+    --panel-strong: 222 20% 10%;
+    --panel-border: 160 14% 18%;
+    --panel-glow: 160 70% 48%;
+    --panel-warm: 38 92% 56%;
+    --shell-shadow: 0 0% 0%;
+    --chrome-bg: 222 26% 3%;
+    --chrome-border: 160 15% 18%;
+    --nav-active: 160 70% 48%;
+    --neon: 160 65% 52%;
+    --neon-alt: 199 80% 58%;
+    --neon-hot: 0 72% 58%;
+    --neon-warn: 38 90% 56%;
+    --signal-live: 160 65% 52%;
+    --signal-observed: 199 80% 58%;
+    --signal-inferred: 265 50% 62%;
+    --signal-stale: 220 10% 46%;
+    --signal-degraded: 38 88% 54%;
+    --signal-critical: 0 72% 58%;
+    --signal-frozen: 210 22% 48%;
+    --signal-unsupported: 220 8% 38%;
+    --signal-complete: 160 62% 48%;
+    --signal-partial: 38 85% 52%;
+    --signal-topology-isolated: 265 48% 58%;
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground font-sans antialiased;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+    color: hsl(var(--foreground));
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-foreground;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where(
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    [role='button'],
+    [tabindex]:not([tabindex='-1'])
+  ):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  .prose-body {
+    @apply font-sans text-mel-sm;
+    line-height: 1.62;
+    letter-spacing: 0.01em;
+  }
+
+  code,
+  kbd,
+  samp {
+    @apply font-mono text-[0.92em];
+  }
+}
+
+@layer components {
+
+  /* ╔══════════════════════════════════════════╗
+     ║  MEL TERMINAL SURFACE SYSTEM            ║
+     ╚══════════════════════════════════════════╝ */
+
+  .surface-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid hsl(var(--panel-border));
+    border-radius: var(--radius);
+    background: hsl(var(--panel));
+  }
+
+  /* Functional top-edge separator; avoid decorative glow noise */
+  .surface-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--border) / 0.35) 0%,
+      hsl(var(--signal-observed) / 0.18) 50%,
+      hsl(var(--border) / 0.35) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .surface-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .surface-panel-strong {
+    background: hsl(var(--panel-strong));
+  }
+
+  .surface-panel-muted {
+    background: hsl(var(--panel-muted));
+  }
+
+  /** Standard page section / inspector wrapper */
+  .mel-panel {
+    @apply surface-panel;
+  }
+
+  .mel-panel-inset {
+    @apply border border-border/80 bg-muted/25 rounded-[var(--radius)] px-3 py-2;
+  }
+
+  /** Topology / graph canvas — grid = operational map surface */
+  .mel-topology-svg {
+    background-color: hsl(var(--panel-muted));
+    background-image:
+      linear-gradient(hsl(var(--neon) / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--neon) / 0.055) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /** Segmented control — same language as CLI flags / TUI tabs */
+  .mel-segment {
+    @apply inline-flex items-center border border-border bg-panel-muted font-mono text-mel-sm font-semibold uppercase tracking-wide text-muted-foreground transition-colors;
+    border-radius: var(--radius);
+    padding: 0.125rem 0.25rem;
+    gap: 0.125rem;
+  }
+
+  .mel-segment-item {
+    @apply px-2 py-1 outline-none transition-colors;
+    border-radius: calc(var(--radius) - 1px);
+  }
+
+  .mel-segment-item:focus-visible {
+    @apply ring-1 ring-ring ring-offset-1 ring-offset-background;
+  }
+
+  .mel-segment-item-active {
+    background: hsl(var(--neon) / 0.12);
+    color: hsl(var(--neon));
+    border: 1px solid hsl(var(--neon) / 0.35);
+  }
+
+  .mel-segment-item-inactive {
+    @apply border border-transparent hover:bg-muted/50 hover:text-foreground;
+  }
+
+  .surface-inset {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .surface-toolbar {
+    border: 1px solid hsl(var(--chrome-border));
+    border-radius: var(--radius);
+    background: hsl(var(--chrome-bg));
+  }
+
+  .raw-block {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--muted) / 0.4);
+    @apply font-mono text-mel-sm;
+    padding: 0.75rem 1rem;
+  }
+
+  /* ─── Interactive States ─── */
+
+  .interactive-lift,
+  .card-hover {
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+
+  .interactive-lift:hover,
+  .card-hover:hover {
+    border-color: hsl(var(--signal-observed) / 0.35);
+    box-shadow: inset 0 0 0 1px hsl(var(--signal-observed) / 0.1);
+  }
+
+  /* ─── Icon Button ─── */
+
+  .icon-button {
+    @apply inline-flex items-center justify-center border border-border bg-card text-muted-foreground outline-none;
+    border-radius: var(--radius);
+    min-height: 1.75rem;
+    min-width: 1.75rem;
+    transition: border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  }
+
+  .icon-button:hover {
+    border-color: hsl(var(--signal-observed) / 0.45);
+    color: hsl(var(--signal-observed));
+    box-shadow: none;
+  }
+
+  .icon-button:focus-visible {
+    @apply ring-1 ring-ring ring-offset-1 ring-offset-background;
+  }
+
+  /* ╔══════════════════════════════════════════╗
+     ║  BUTTON SYSTEM — TERMINAL COMMANDS      ║
+     ╚══════════════════════════════════════════╝ */
+
+  .button-base,
+  .button-primary,
+  .button-secondary,
+  .button-danger,
+  .button-ghost {
+    @apply inline-flex items-center justify-center gap-2 border px-3 py-1.5 font-mono text-mel-sm font-bold uppercase text-foreground outline-none;
+    border-radius: var(--radius);
+    letter-spacing: 0.06em;
+    transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  }
+
+  .button-base:focus-visible,
+  .button-primary:focus-visible,
+  .button-secondary:focus-visible,
+  .button-danger:focus-visible,
+  .button-ghost:focus-visible {
+    @apply ring-1 ring-ring ring-offset-1 ring-offset-background;
+  }
+
+  .button-base:disabled,
+  .button-primary:disabled,
+  .button-secondary:disabled,
+  .button-danger:disabled,
+  .button-ghost:disabled {
+    @apply cursor-not-allowed opacity-30;
+  }
+
+  .button-primary {
+    border-color: hsl(var(--neon) / 0.6);
+    background: hsl(var(--neon) / 0.12);
+    color: hsl(var(--neon));
+    box-shadow: none;
+  }
+
+  .button-primary:hover {
+    background: hsl(var(--neon) / 0.2);
+    border-color: hsl(var(--neon) / 0.8);
+  }
+
+  .button-secondary {
+    @apply border-border bg-card text-foreground;
+  }
+
+  .button-secondary:hover {
+    border-color: hsl(var(--neon) / 0.3);
+    color: hsl(var(--neon));
+  }
+
+  .button-danger {
+    border-color: hsl(var(--neon-hot) / 0.6);
+    background: hsl(var(--neon-hot) / 0.1);
+    color: hsl(var(--neon-hot));
+    box-shadow: none;
+  }
+
+  .button-danger:hover {
+    background: hsl(var(--neon-hot) / 0.18);
+  }
+
+  .button-ghost {
+    @apply border-transparent bg-transparent text-muted-foreground;
+  }
+
+  .button-ghost:hover {
+    color: hsl(var(--neon));
+    background: hsl(var(--neon) / 0.06);
+  }
+
+  /* ╔══════════════════════════════════════════╗
+     ║  STATUS / BADGE — BRACKET STYLE         ║
+     ╚══════════════════════════════════════════╝ */
+
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-mel-xs font-bold uppercase;
+    border-radius: var(--radius);
+    letter-spacing: 0.08em;
+  }
+
+  .status-dot {
+    @apply h-1.5 w-1.5 rounded-full;
+    box-shadow: none;
+  }
+
+  /* ─── List Row ─── */
+
+  .list-row {
+    @apply relative flex items-center border border-border bg-card text-foreground;
+    border-radius: var(--radius);
+    transition: border-color 100ms ease, background-color 100ms ease;
+  }
+
+  .list-row:hover {
+    border-color: hsl(var(--neon) / 0.3);
+    background: hsl(var(--neon) / 0.04);
+  }
+
+  /* ─── Skeleton Loading ─── */
+
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted));
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--neon) / 0.06) 50%,
+      hsl(var(--muted)) 100%
+    );
+  }
+
+  /* ─── Attention Pulse ─── */
+
+  .attention-pulse { position: relative; }
+
+  .attention-pulse::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid hsl(var(--neon-warn) / 0.5);
+    animation: attention-ring 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ─── Evidence Bar ─── */
+
+  .evidence-bar {
+    @apply h-1;
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, hsl(var(--neon-warn) / 0.7) 0%, hsl(var(--neon) / 0.9) 100%);
+  }
+
+  .evidence-bar[data-strength='sparse'] {
+    background: hsl(var(--muted-foreground) / 0.2);
+    width: 33%;
+  }
+
+  .evidence-bar[data-strength='moderate'] {
+    background: hsl(var(--neon-warn) / 0.5);
+    width: 66%;
+  }
+
+  .evidence-bar[data-strength='strong'] {
+    background: hsl(var(--neon) / 0.6);
+    width: 100%;
+  }
+
+  /* ─── Section Divider ─── */
+
+  .section-divider {
+    @apply flex items-center gap-3;
+  }
+
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg,
+      hsl(var(--border)) 0px,
+      hsl(var(--border)) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+
+  /* ╔══════════════════════════════════════════╗
+     ║  MEL OPERATOR VISUAL MOTIFS             ║
+     ╚══════════════════════════════════════════╝ */
+
+  /* Grid background — like a terminal graph */
+  .mel-grid-bg {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.18) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.18) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Signal line — neon top edge */
+  .mel-signal-top {
+    position: relative;
+  }
+
+  .mel-signal-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      hsl(var(--neon) / 0),
+      hsl(var(--neon) / 0.6) 30%,
+      hsl(var(--neon) / 1) 50%,
+      hsl(var(--neon) / 0.6) 70%,
+      hsl(var(--neon) / 0)
+    );
+    z-index: 2;
+  }
+
+  /* ─── Terminal Label ─── */
+
+  .mel-label {
+    @apply font-mono text-mel-label text-muted-foreground uppercase;
+  }
+
+  /* ─── Metric Display ─── */
+
+  .mel-metric {
+    @apply font-mono font-bold text-mel-metric;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: hsl(var(--neon));
+  }
+
+  /* ─── Terminal prompt prefix for headings ─── */
+
+  .mel-prompt::before {
+    content: '>';
+    color: hsl(var(--neon));
+    margin-right: 0.5em;
+    font-weight: 400;
+  }
+
+  .mel-prompt-hash::before {
+    content: '#';
+    color: hsl(var(--muted-foreground));
+    margin-right: 0.5em;
+    font-weight: 400;
+  }
+
+  /* ─── Box-drawing panel chrome ─── */
+
+  .mel-chrome-title {
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 0.4rem 0.75rem;
+    @apply font-mono text-mel-label text-muted-foreground uppercase bg-panel-strong flex items-center gap-2;
+  }
+
+  .mel-chrome-title::before {
+    content: '┃';
+    color: hsl(var(--neon) / 0.6);
+  }
+
+  /* ─── Subtle text emphasis utility ─── */
+
+  .neon-glow {
+    text-shadow: none;
+  }
+
+  .neon-glow-hot {
+    text-shadow: none;
+  }
+
+  .neon-glow-warn {
+    text-shadow: none;
+  }
+
+  /* ─── ASCII box utility ─── */
+
+  .ascii-box {
+    border: 1px dashed hsl(var(--border));
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    background: hsl(var(--panel-muted));
+  }
+}
+
+@layer utilities {
+  /** Prefer surface-panel / mel-panel-inset — glass is legacy */
+  .glass {
+    @apply border border-border/80 bg-card/95;
+  }
+
+  .glass-dark {
+    @apply border border-border/60 bg-panel-muted/95;
+  }
+
+  .section-enter {
+    animation: surface-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .page-enter {
+    animation: surface-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .delay-0 { animation-delay: 0ms; }
+  .delay-50 { animation-delay: 50ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-250 { animation-delay: 250ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+}
+
+/* ╔══════════════════════════════════════════╗
+   ║  SCROLLBAR — MINIMAL TERMINAL           ║
+   ╚══════════════════════════════════════════╝ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--neon) / 0.15);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--neon) / 0.3);
+}
+
+
+/* ╔══════════════════════════════════════════╗
+   ║  STATUS CLASSES                         ║
+   ╚══════════════════════════════════════════╝ */
+
+.status-healthy {
+  border-color: hsl(var(--neon) / 0.3);
+  background: hsl(var(--neon) / 0.06);
+  color: hsl(var(--neon));
+}
+
+.status-warning {
+  border-color: hsl(var(--neon-warn) / 0.3);
+  background: hsl(var(--neon-warn) / 0.06);
+  color: hsl(var(--neon-warn));
+}
+
+.status-critical {
+  border-color: hsl(var(--neon-hot) / 0.3);
+  background: hsl(var(--neon-hot) / 0.06);
+  color: hsl(var(--neon-hot));
+}
+
+.status-unknown {
+  @apply border-border bg-muted/40 text-muted-foreground;
+}
+
+.status-observed {
+  border-color: hsl(var(--neon-alt) / 0.3);
+  background: hsl(var(--neon-alt) / 0.06);
+  color: hsl(var(--neon-alt));
+}
+
+.status-inferred {
+  border-color: hsl(var(--inferred) / 0.3);
+  background: hsl(var(--inferred) / 0.06);
+  color: hsl(var(--inferred));
+}
+
+.status-stale {
+  border-color: hsl(var(--stale) / 0.3);
+  background: hsl(var(--stale) / 0.06);
+  color: hsl(var(--stale));
+}
+
+.status-frozen {
+  border-color: hsl(var(--frozen) / 0.3);
+  background: hsl(var(--frozen) / 0.06);
+  color: hsl(var(--frozen));
+}
+
+.status-degraded {
+  border-color: hsl(var(--neon-warn) / 0.3);
+  background: hsl(var(--neon-warn) / 0.06);
+  color: hsl(var(--neon-warn));
+}
+
+/* ╔══════════════════════════════════════════╗
+   ║  KEYFRAMES                              ║
+   ╚══════════════════════════════════════════╝ */
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes surface-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes surface-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes attention-ring {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+
+
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-fade-in {
+  animation: surface-fade 150ms ease-out both;
+}
+
+.animate-slide-up,
+.animate-expand-in {
+  animation: surface-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-toast-in {
+  animation: toast-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+
+.animate-neon-flicker {
+  animation: none;
+}
+
+.animate-data-stream {
+  animation: none;
+}
+
+.stagger-children > * {
+  animation: surface-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  opacity: 0;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 30ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 90ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 210ms; }
+
+/* ─── Health Progress Bar ─── */
+
+progress.health-progress {
+  @apply h-1 w-full appearance-none overflow-hidden bg-muted;
+  border-radius: 0;
+}
+
+progress.health-progress::-webkit-progress-bar { @apply bg-muted; }
+
+progress.health-progress::-webkit-progress-value {
+  transition: width 250ms ease;
+  border-radius: 0;
+}
+
+progress.health-progress.progress-success::-webkit-progress-value {
+  background: hsl(var(--neon));
+  box-shadow: none;
+}
+progress.health-progress.progress-warning::-webkit-progress-value {
+  background: hsl(var(--neon-warn));
+  box-shadow: none;
+}
+progress.health-progress.progress-critical::-webkit-progress-value {
+  background: hsl(var(--neon-hot));
+  box-shadow: none;
+}
+progress.health-progress.progress-default::-webkit-progress-value {
+  background: hsl(var(--neon));
+}
+
+progress.health-progress::-moz-progress-bar {
+  transition: width 250ms ease;
+  border-radius: 0;
+}
+
+progress.health-progress.progress-success::-moz-progress-bar { background: hsl(var(--neon)); }
+progress.health-progress.progress-warning::-moz-progress-bar { background: hsl(var(--neon-warn)); }
+progress.health-progress.progress-critical::-moz-progress-bar { background: hsl(var(--neon-hot)); }
+progress.health-progress.progress-default::-moz-progress-bar { background: hsl(var(--neon)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-lift,
+  .interactive-lift:hover,
+  .button-base:hover,
+  .icon-button:hover,
+  .list-row:hover {
+    transform: none !important;
+  }
+}

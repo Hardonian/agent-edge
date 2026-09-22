@@ -1,0 +1,109 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { PageHeader, Section } from '@/components/marketing';
+import { repoBlob } from '@/lib/repo';
+
+export const metadata: Metadata = {
+  title: 'Help / Orientation',
+  description: 'Fast context for operators: what surfaces exist, what state labels mean, and where to go when evidence looks incomplete.',
+};
+
+export default function HelpPage() {
+  return (
+    <>
+      <PageHeader
+        kicker="operator orientation"
+        title="Help / orientation"
+        subtitle="Fast context for operators: what surfaces exist, what state labels mean, and where to go when evidence looks incomplete."
+      />
+
+      <p className="callout" role="note">
+        This page is on the <strong>public orientation site</strong> — static HTML, no live link to your MEL instance. Status and
+        API checks below apply when <code>mel serve</code> is running on <em>your</em> host.
+      </p>
+
+      <Section title="Main surfaces in MEL" kicker="surfaces" accent="green">
+        <div className="grid">
+          <article className="card">
+            <h3>Status and diagnostics</h3>
+            <p>Check readiness posture, transport visibility, and host-level checks via status endpoints and `mel doctor`.</p>
+          </article>
+          <article className="card">
+            <h3>Incidents and evidence</h3>
+            <p>Incident queue, timeline context, proofpacks, and action history tie outcomes to persisted records.</p>
+          </article>
+          <article className="card">
+            <h3>Transports and messages</h3>
+            <p>Observe ingest path health, stale/degraded conditions, dead letters, and replay context.</p>
+          </article>
+          <article className="card">
+            <h3>Control lifecycle</h3>
+            <p>Submission, approval, dispatch, execution result, and audit state are separate for trust and attribution.</p>
+          </article>
+        </div>
+      </Section>
+
+      <Section title="Semantic labels you should trust" kicker="signal language">
+        <ul>
+          <li><strong>Live</strong>: recent persisted ingest evidence exists.</li>
+          <li><strong>Stale</strong>: evidence exists but is old for runtime confidence.</li>
+          <li><strong>Historical/imported</strong>: context for analysis, not direct proof of current runtime.</li>
+          <li><strong>Partial/degraded/unknown</strong>: known gaps, missing context, or unsupported conditions are explicit.</li>
+        </ul>
+      </Section>
+
+      <Section title="Common first questions">
+        <ul>
+          <li>“Is MEL routing RF traffic?” → No. MEL is not the mesh routing stack.</li>
+          <li>“Why is doctor warning?” → On first run, missing active transports is normal and intentionally visible.</li>
+          <li>“Why does a map or panel look incomplete?” → Treat missing data as degraded/unknown, then inspect status, diagnostics, and transport logs.</li>
+        </ul>
+      </Section>
+
+      <Section title="Troubleshooting entrypoints" kicker="triage" accent="blue">
+        <ul>
+          <li>Run `./bin/mel doctor --config ...` for host and runtime checks.</li>
+          <li>Check `/api/v1/status`, `/readyz`, and `/api/v1/readyz` before assuming healthy ingest.</li>
+          <li>Use fixture mode (`make demo-seed`) when validating workflows without active radios.</li>
+          <li>
+            Canonical docs:{' '}
+            <a href={repoBlob('docs/ops/troubleshooting.md')} rel="noreferrer" target="_blank">
+              troubleshooting
+            </a>
+            ,{' '}
+            <a href={repoBlob('docs/runbooks/README.md')} rel="noreferrer" target="_blank">
+              runbooks
+            </a>
+            ,{' '}
+            <a href={repoBlob('docs/repo-os/terminology.md')} rel="noreferrer" target="_blank">
+              terminology
+            </a>
+            .
+          </li>
+          <li>
+            <Link href="/guide">Site vs console vs repository docs</Link>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="Ten-minute orientation checklist">
+        <ol>
+          <li>Read <Link href="/quickstart">Quick start</Link> and run commands exactly once end-to-end.</li>
+          <li>Confirm you can open the embedded console at <code>127.0.0.1:8080</code>.</li>
+          <li>Validate that degraded or unknown states are explicit when transports are not connected.</li>
+          <li>
+            Before deeper evaluation, review{' '}
+            <a href={repoBlob('docs/ops/support-matrix.md')} rel="noreferrer" target="_blank">
+              support matrix
+            </a>{' '}
+            and{' '}
+            <a href={repoBlob('docs/ops/limitations.md')} rel="noreferrer" target="_blank">
+              limitations
+            </a>
+            .
+          </li>
+        </ol>
+      </Section>
+    </>
+  );
+}
