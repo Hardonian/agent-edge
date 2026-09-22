@@ -1,0 +1,20 @@
+{
+  "name": "mel-meshedgelayer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Meta-package. The actual Next.js app lives in ./site (next@16, react@19) and is built by vercel.json / CI with working-directory: site. Dependabot should scan ./site/package.json, NOT this root manifest.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "cd site && npm run build",
+    "dev": "cd site && npm run dev",
+    "start": "cd site && npm run start",
+    "lint": "cd site && npm run lint",
+    "typecheck": "cd site && npm run typecheck"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}
