@@ -1,0 +1,14 @@
+version: 1
+
+capture:
+  content: false
+
+limits:
+  max_events: 100000
+
+checks:
+  fail_on:
+    - retry_storm
+    - loop
+  max_cost: 0.05
+  max_latency_ms: 10000

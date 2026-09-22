@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spec.agentpcap.dev/v1/apcap.schema.json",
+  "title": "Agent Packet Capture (APCAP) Specification",
+  "description": "Standard schema for AgentPCAP captures, manifests, and canonical event records.",
+  "type": "object",
+  "definitions": {
+    "Manifest": {
+      "type": "object",
+      "required": [
+        "format",
+        "format_version",
+        "capture_id",
+        "created_at",
+        "agentpcap_version",
+        "host_metadata",
+        "capture_mode",
+        "redaction_mode",
+        "protocols_seen",
+        "event_count",
+        "hashes"
+      ],
+      "properties": {
+        "format": { "type": "string", "const": "apcap" },
+        "format_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "capture_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "agentpcap_version": { "type": "string" },
+        "host_metadata": {
+          "type": "object",
+          "required": ["os", "arch"],
+          "properties": {
+            "os": { "type": "string" },
+            "arch": { "type": "string" },
+            "go_version": { "type": "string" }
+          }
+        },
+        "capture_mode": { "type": "string", "enum": ["proxy", "otlp", "sdk", "child_process", "simulation"] },
+        "redaction_mode": { "type": "string", "enum": ["metadata_only", "sanitized_content", "full_content"] },
+        "protocols_seen": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "event_count": { "type": "integer", "minimum": 0 },
+        "attachment_count": { "type": "integer", "minimum": 0 },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "Endpoint": {
+      "type": "object",
+      "required": ["name", "kind"],
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "type": "string", "enum": ["agent", "model", "tool", "mcp_server", "service", "client"] },
+        "host": { "type": "string" },
+        "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "metadata": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "TokenUsage": {
+      "type": "object",
+      "required": ["input_tokens", "output_tokens", "total_tokens"],
+      "properties": {
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "cached_tokens": { "type": "integer", "minimum": 0 },
+        "total_tokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Money": {
+      "type": "object",
+      "required": ["amount", "currency", "status"],
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["MEASURED", "PROVIDER_REPORTED", "ESTIMATED", "UNKNOWN"] },
+        "source": { "type": "string" }
+      }
+    },
+    "PayloadRef": {
+      "type": "object",
+      "required": ["length", "truncated", "redacted"],
+      "properties": {
+        "length": { "type": "integer", "minimum": 0 },
+        "content_type": { "type": "string" },
+        "attachment_path": { "type": "string" },
+        "truncated": { "type": "boolean" },
+        "redacted": { "type": "boolean" },
+        "preview": { "type": "string" }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "required": [
+        "id",
+        "trace_id",
+        "timestamp",
+        "duration_ms",
+        "type",
+        "protocol",
+        "operation",
+        "source",
+        "destination",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "trace_id": { "type": "string" },
+        "parent_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "duration_ms": { "type": "number", "minimum": 0 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "AGENT_START", "AGENT_END", "AGENT_INVOKE", "AGENT_RESPONSE", "DELEGATION",
+            "A2A_REQUEST", "A2A_RESPONSE", "A2A_STREAM", "A2A_ERROR",
+            "MCP_DISCOVER", "MCP_TOOLS_LIST", "MCP_TOOL_CALL", "MCP_TOOL_RESULT", "MCP_ERROR",
+            "MODEL_REQUEST", "MODEL_STREAM", "MODEL_RESPONSE", "MODEL_ERROR",
+            "TOOL_CALL", "TOOL_RESULT",
+            "HTTP_REQUEST", "HTTP_RESPONSE",
+            "POLICY_DECISION",
+            "RETRY", "TIMEOUT", "CIRCUIT_OPEN",
+            "ERROR", "WARNING", "CUSTOM"
+          ]
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["A2A", "MCP", "MODEL", "TOOL", "HTTP", "POLICY", "OTLP", "CUSTOM"]
+        },
+        "operation": { "type": "string" },
+        "source": { "$ref": "#/definitions/Endpoint" },
+        "destination": { "$ref": "#/definitions/Endpoint" },
+        "status": { "type": "string", "enum": ["OK", "ERROR", "TIMEOUT", "CANCELLED", "UNKNOWN"] },
+        "attributes": { "type": "object" },
+        "tokens": { "$ref": "#/definitions/TokenUsage" },
+        "cost": { "$ref": "#/definitions/Money" },
+        "payload": { "$ref": "#/definitions/PayloadRef" },
+        "provenance": {
+          "type": "string",
+          "enum": ["OBSERVED", "PROTOCOL_PARSED", "OTEL", "SDK", "DERIVED", "ESTIMATED", "UNKNOWN"]
+        }
+      }
+    }
+  }
+}

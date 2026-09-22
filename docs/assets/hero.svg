@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 540" width="1000" height="540" style="background:#090d16; border-radius: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'JetBrains Mono', monospace;">
+  <defs>
+    <!-- Background Grid -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1"/>
+    </pattern>
+    
+    <!-- Gradients -->
+    <linearGradient id="bgGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1726" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <linearGradient id="purpleGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7e22ce" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+
+    <linearGradient id="emeraldGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <linearGradient id="roseGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#dc2626" />
+      <stop offset="100%" stop-color="#f87171" />
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Layer -->
+  <rect width="1000" height="540" fill="url(#bgGlow)" rx="12" />
+  <rect width="1000" height="540" fill="url(#grid)" rx="12" />
+  <rect width="998" height="538" x="1" y="1" fill="none" stroke="rgba(255,255,255,0.08)" rx="12" />
+
+  <!-- Top Title & Brand Bar -->
+  <g transform="translate(40, 36)">
+    <rect width="28" height="28" rx="6" fill="#1e293b" />
+    <circle cx="7" cy="14" r="2.5" fill="#38bdf8" />
+    <circle cx="14" cy="7" r="2.5" fill="#c084fc" />
+    <circle cx="14" cy="21" r="2.5" fill="#34d399" />
+    <circle cx="21" cy="14" r="2.5" fill="#fbbf24" />
+    <path d="M7 14 H21" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 2" />
+
+    <text x="38" y="20" fill="#f8fafc" font-size="18" font-weight="800" letter-spacing="-0.5px">
+      Agent<tspan fill="#38bdf8">PCAP</tspan>
+    </text>
+    <text x="138" y="20" fill="#64748b" font-size="12" font-family="'JetBrains Mono', monospace" font-weight="600">
+      v1.0.0 // WIRESHARK FOR AI AGENTS
+    </text>
+
+    <!-- Protocol Badges -->
+    <g transform="translate(620, 2)">
+      <rect width="64" height="22" rx="4" fill="rgba(192, 132, 252, 0.15)" stroke="rgba(192, 132, 252, 0.4)" />
+      <text x="32" y="15" fill="#c084fc" font-size="10" font-weight="700" text-anchor="middle">A2A</text>
+
+      <rect x="72" width="64" height="22" rx="4" fill="rgba(251, 191, 36, 0.15)" stroke="rgba(251, 191, 36, 0.4)" />
+      <text x="104" y="15" fill="#fbbf24" font-size="10" font-weight="700" text-anchor="middle">MCP</text>
+
+      <rect x="144" width="64" height="22" rx="4" fill="rgba(56, 189, 248, 0.15)" stroke="rgba(56, 189, 248, 0.4)" />
+      <text x="176" y="15" fill="#38bdf8" font-size="10" font-weight="700" text-anchor="middle">MODEL</text>
+
+      <rect x="216" width="64" height="22" rx="4" fill="rgba(52, 211, 153, 0.15)" stroke="rgba(52, 211, 153, 0.4)" />
+      <text x="248" y="15" fill="#34d399" font-size="10" font-weight="700" text-anchor="middle">TOOL</text>
+    </g>
+  </g>
+
+  <!-- Live Traffic Lanes / Connectors -->
+  <g>
+    <!-- Finance Agent to Research Agent (A2A) -->
+    <path d="M 230 180 L 460 180" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="6 4" />
+    <circle cx="345" cy="180" r="4" fill="#c084fc" filter="url(#glow)" />
+
+    <!-- Finance Agent to Procurement Agent (A2A) -->
+    <path d="M 230 210 Q 345 320 460 320" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="6 4" opacity="0.7" />
+
+    <!-- Research Agent to MCP Analytics (MCP) -->
+    <path d="M 680 165 L 770 165" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="6 4" />
+    <circle cx="725" cy="165" r="4" fill="#fbbf24" filter="url(#glow)" />
+
+    <!-- Research Agent to Gemini LLM (MODEL) -->
+    <path d="M 680 195 Q 730 250 770 250" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 4" />
+    <circle cx="728" cy="225" r="4" fill="#38bdf8" filter="url(#glow)" />
+
+    <!-- Procurement Agent to Order Tool (TOOL) -->
+    <path d="M 680 320 L 770 320" fill="none" stroke="#34d399" stroke-width="2" stroke-dasharray="6 4" />
+    <circle cx="725" cy="320" r="3.5" fill="#34d399" />
+  </g>
+
+  <!-- NODE 1: Orchestrator / Finance Agent -->
+  <g transform="translate(50, 140)">
+    <rect width="180" height="90" rx="10" fill="#131d2e" stroke="#38bdf8" stroke-width="1.5" filter="url(#glow)" opacity="0.2" />
+    <rect width="180" height="90" rx="10" fill="#111827" stroke="#38bdf8" stroke-width="1.5" />
+    <circle cx="24" cy="26" r="10" fill="rgba(56, 189, 248, 0.2)" />
+    <text x="24" y="30" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">⚙</text>
+    <text x="44" y="25" fill="#f8fafc" font-size="13" font-weight="700">finance-agent</text>
+    <text x="44" y="40" fill="#64748b" font-size="10" font-family="'JetBrains Mono', monospace">Role: Orchestrator</text>
+    
+    <line x1="12" y1="55" x2="168" y2="55" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text x="16" y="74" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">Active Tasks: <tspan fill="#38bdf8">2 delegated</tspan></text>
+  </g>
+
+  <!-- NODE 2: Research Subagent -->
+  <g transform="translate(460, 135)">
+    <rect width="220" height="100" rx="10" fill="#151928" stroke="#c084fc" stroke-width="1.5" filter="url(#glow)" opacity="0.25" />
+    <rect width="220" height="100" rx="10" fill="#111827" stroke="#c084fc" stroke-width="1.5" />
+    <circle cx="24" cy="26" r="10" fill="rgba(192, 132, 252, 0.2)" />
+    <text x="24" y="30" fill="#c084fc" font-size="12" font-weight="900" text-anchor="middle">⚡</text>
+    <text x="44" y="25" fill="#f8fafc" font-size="13" font-weight="700">research-agent</text>
+    <text x="44" y="40" fill="#a855f7" font-size="10" font-family="'JetBrains Mono', monospace">Protocol: A2A (Depth: 1)</text>
+    
+    <line x1="12" y1="55" x2="208" y2="55" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text x="16" y="73" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">MCP Tool: <tspan fill="#fbbf24">analytics_query</tspan></text>
+    <text x="16" y="88" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">LLM: <tspan fill="#38bdf8">Gemini 1.5 Pro</tspan></text>
+  </g>
+
+  <!-- NODE 3: Procurement Agent -->
+  <g transform="translate(460, 275)">
+    <rect width="220" height="85" rx="10" fill="#111827" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+    <circle cx="24" cy="26" r="10" fill="rgba(52, 211, 153, 0.2)" />
+    <text x="24" y="30" fill="#34d399" font-size="12" font-weight="900" text-anchor="middle">✓</text>
+    <text x="44" y="25" fill="#f8fafc" font-size="13" font-weight="700">procurement-agent</text>
+    <text x="44" y="40" fill="#64748b" font-size="10" font-family="'JetBrains Mono', monospace">Policy: spend_limit (OK)</text>
+    
+    <line x1="12" y1="52" x2="208" y2="52" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <text x="16" y="70" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">Tool: <tspan fill="#34d399">execute_purchase_order</tspan></text>
+  </g>
+
+  <!-- NODE 4: MCP Analytics Server -->
+  <g transform="translate(770, 125)">
+    <rect width="180" height="75" rx="8" fill="#1c1917" stroke="#fbbf24" stroke-width="1.2" />
+    <text x="16" y="24" fill="#fbbf24" font-size="11" font-weight="700">MCP JSON-RPC 2.0</text>
+    <text x="16" y="42" fill="#f8fafc" font-size="13" font-weight="600">mcp-analytics</text>
+    <text x="16" y="60" fill="#a8a29e" font-size="10" font-family="'JetBrains Mono', monospace">Latency: 415ms (3 calls)</text>
+  </g>
+
+  <!-- NODE 5: Model Provider / Gemini -->
+  <g transform="translate(770, 215)">
+    <rect width="180" height="80" rx="8" fill="#0c1929" stroke="#38bdf8" stroke-width="1.2" />
+    <text x="16" y="24" fill="#38bdf8" font-size="11" font-weight="700">MODEL INFERENCE</text>
+    <text x="16" y="42" fill="#f8fafc" font-size="13" font-weight="600">gemini-1.5-pro</text>
+    <text x="16" y="60" fill="#7dd3fc" font-size="10" font-family="'JetBrains Mono', monospace">Tokens: 2,490 ($0.0055)</text>
+  </g>
+
+  <!-- NODE 6: External Purchase System Tool -->
+  <g transform="translate(770, 310)">
+    <rect width="180" height="60" rx="8" fill="#062217" stroke="#34d399" stroke-width="1.2" />
+    <text x="16" y="24" fill="#34d399" font-size="11" font-weight="700">TOOL EXECUTION</text>
+    <text x="16" y="44" fill="#f8fafc" font-size="12" font-weight="600">PO-88219 (OK, 110ms)</text>
+  </g>
+
+  <!-- BOTTOM SECTION: LIVE FORENSIC HUD & PATHOLOGY CALLOUT -->
+  <g transform="translate(50, 400)">
+    <!-- Main HUD Container -->
+    <rect width="900" height="105" rx="10" fill="#0d131f" stroke="#1e293b" stroke-width="1.2" />
+
+    <!-- Metric Card 1: Wall Clock Duration -->
+    <g transform="translate(24, 20)">
+      <text x="0" y="14" fill="#64748b" font-size="11" font-weight="600" font-family="'JetBrains Mono', monospace">WALL CLOCK</text>
+      <text x="0" y="44" fill="#f8fafc" font-size="24" font-weight="800">1.53<tspan font-size="14" fill="#94a3b8">s</tspan></text>
+      <text x="0" y="64" fill="#38bdf8" font-size="10" font-family="'JetBrains Mono', monospace">Critical: 820ms (53%)</text>
+    </g>
+
+    <!-- Metric Card 2: Total Tokens -->
+    <g transform="translate(190, 20)">
+      <text x="0" y="14" fill="#64748b" font-size="11" font-weight="600" font-family="'JetBrains Mono', monospace">TOTAL TOKENS</text>
+      <text x="0" y="44" fill="#38bdf8" font-size="24" font-weight="800">2,490</text>
+      <text x="0" y="64" fill="#64748b" font-size="10" font-family="'JetBrains Mono', monospace">1,850 in / 640 out</text>
+    </g>
+
+    <!-- Metric Card 3: Total Cost -->
+    <g transform="translate(340, 20)">
+      <text x="0" y="14" fill="#64748b" font-size="11" font-weight="600" font-family="'JetBrains Mono', monospace">COST (EST)</text>
+      <text x="0" y="44" fill="#34d399" font-size="24" font-weight="800">$0.0055</text>
+      <text x="0" y="64" fill="#64748b" font-size="10" font-family="'JetBrains Mono', monospace">USD // Snapshot v1</text>
+    </g>
+
+    <!-- Vertical Separator -->
+    <line x1="490" y1="15" x2="490" y2="90" stroke="#1e293b" stroke-width="1.5" />
+
+    <!-- Pathology Callout Card -->
+    <g transform="translate(515, 16)">
+      <rect width="360" height="72" rx="6" fill="rgba(220, 38, 38, 0.12)" stroke="rgba(248, 113, 113, 0.35)" stroke-width="1" />
+      <circle cx="20" cy="22" r="7" fill="#dc2626" />
+      <text x="20" y="26" fill="#ffffff" font-size="10" font-weight="900" text-anchor="middle">!</text>
+      <text x="35" y="24" fill="#f87171" font-size="12" font-weight="700">PATHOLOGY DETECTED: RETRY_STORM</text>
+      <text x="16" y="46" fill="#cbd5e1" font-size="11" font-family="'JetBrains Mono', monospace">tools/call:analytics_query failed 2x (429/503)</text>
+      <text x="16" y="62" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">Zero-LLM diagnosis: Backoff throttled at 300ms</text>
+    </g>
+  </g>
+</svg>

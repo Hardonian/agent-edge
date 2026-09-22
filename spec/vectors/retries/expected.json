@@ -1,0 +1,116 @@
+{
+  "manifest": {
+    "format": "apcap",
+    "format_version": "1.0.0",
+    "capture_id": "vector_retries",
+    "created_at": "2026-09-04T12:00:00Z",
+    "completed_at": "2026-09-04T12:00:01.8Z",
+    "agentpcap_version": "",
+    "host_metadata": {
+      "os": "",
+      "arch": ""
+    },
+    "capture_mode": "simulation",
+    "redaction_mode": "metadata_only",
+    "protocols_seen": null,
+    "event_count": 0,
+    "attachment_count": 0,
+    "hashes": null
+  },
+  "metadata": {
+    "title": "Deterministic Retry Storm Pathology Vector",
+    "total_duration_ms": 1800,
+    "total_tokens": {
+      "input_tokens": 300,
+      "output_tokens": 50,
+      "total_tokens": 350
+    },
+    "total_cost": 0.003,
+    "currency": "",
+    "agent_count": 0,
+    "model_count": 0,
+    "tool_count": 0,
+    "error_count": 2
+  },
+  "events": [
+    {
+      "id": "ev_retry_1",
+      "trace_id": "tr_retry",
+      "parent_id": "task_root",
+      "timestamp": "2026-09-04T12:00:00Z",
+      "duration_ms": 400,
+      "type": "MODEL_REQUEST",
+      "protocol": "MODEL",
+      "operation": "generateContent",
+      "source": {
+        "name": "data-agent",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "gemini-1.5-flash",
+        "kind": "model"
+      },
+      "status": "ERROR",
+      "attributes": {
+        "error.reason": "RESOURCE_EXHAUSTED",
+        "http.status_code": 429,
+        "model": "gemini-1.5-flash"
+      },
+      "provenance": "OBSERVED"
+    },
+    {
+      "id": "ev_retry_2",
+      "trace_id": "tr_retry",
+      "parent_id": "task_root",
+      "timestamp": "2026-09-04T12:00:00.5Z",
+      "duration_ms": 450,
+      "type": "MODEL_REQUEST",
+      "protocol": "MODEL",
+      "operation": "generateContent",
+      "source": {
+        "name": "data-agent",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "gemini-1.5-flash",
+        "kind": "model"
+      },
+      "status": "ERROR",
+      "attributes": {
+        "error.reason": "RESOURCE_EXHAUSTED",
+        "http.status_code": 429,
+        "model": "gemini-1.5-flash"
+      },
+      "provenance": "OBSERVED"
+    },
+    {
+      "id": "ev_retry_3",
+      "trace_id": "tr_retry",
+      "parent_id": "task_root",
+      "timestamp": "2026-09-04T12:00:01.1Z",
+      "duration_ms": 700,
+      "type": "MODEL_REQUEST",
+      "protocol": "MODEL",
+      "operation": "generateContent",
+      "source": {
+        "name": "data-agent",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "gemini-1.5-flash",
+        "kind": "model"
+      },
+      "status": "OK",
+      "attributes": {
+        "http.status_code": 200,
+        "model": "gemini-1.5-flash"
+      },
+      "tokens": {
+        "input_tokens": 100,
+        "output_tokens": 50,
+        "total_tokens": 150
+      },
+      "provenance": "OBSERVED"
+    }
+  ]
+}

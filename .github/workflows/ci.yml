@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  test-go:
+    name: Go Tests & Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+
+      - name: Create placeholder dist for embed
+        run: mkdir -p web/dist && touch web/dist/.gitkeep
+
+      - name: Verify Formatting & Vetting
+        run: |
+          test -z $(gofmt -l .)
+          go vet ./...
+
+      - name: Run Unit Tests with Race Detection
+        run: |
+          go test -race -v ./...
+
+      - name: Run Fuzz Tests
+        run: |
+          go test -fuzz=FuzzApcapReader ./pkg/apcap -fuzztime=10s
+
+  test-frontend:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Frontend
+        working-directory: ./web
+        run: pnpm typecheck
+
+      - name: Lint Frontend
+        working-directory: ./web
+        run: pnpm lint
+
+      - name: Build Web Assets
+        working-directory: ./web
+        run: pnpm build
+
+  build-binary:
+    name: Build & Verify Single Binary
+    needs: [test-go, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+
+      - name: Set up Node.js & pnpm
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Web Assets
+        working-directory: ./web
+        run: pnpm build
+
+      - name: Compile AgentPCAP Binary
+        run: |
+          go build -ldflags="-s -w -X main.version=1.0.0" -o bin/agentpcap ./cmd/agentpcap
+
+      - name: Smoke Test CLI
+        run: |
+          ./bin/agentpcap version
+          ./bin/agentpcap doctor
+          ./bin/agentpcap demo --no-browser --output demo_ci.apcap &
+          DEMO_PID=$!
+          sleep 4
+          kill -SIGINT $DEMO_PID || true
+          ./bin/agentpcap summary demo_ci.apcap
+          ./bin/agentpcap explain demo_ci.apcap
+          ./bin/agentpcap validate demo_ci.apcap
+          ./bin/agentpcap check demo_ci.apcap --config .agentpcap-ci.yml
