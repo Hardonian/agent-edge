@@ -43,6 +43,19 @@ go build ./pcap/...
 - **MEL**: [mesh-edge/QUICKSTART.md](mesh-edge/QUICKSTART.md) · [mesh-edge/CONTRIBUTING.md](mesh-edge/CONTRIBUTING.md)
 - **AgentPCAP**: [pcap/README.md](pcap/README.md) · [pcap/spec/README.md](pcap/spec/README.md)
 
+
+## Related Repos
+
+### Platform Monorepos
+- [autopilot](https://github.com/Hardonian/autopilot) — ops, finops, growth, support
+- [agent-infra](https://github.com/Hardonian/agent-infra) — control-plane, mission-ledger, agent-mesh, mcpwall
+- [model-tools](https://github.com/Hardonian/model-tools) — model-forge, inference-api, ollama-router
+
+### Commercial
+- [hardonia-store](https://github.com/Hardonian/hardonia-store) — storefront
+- [comfyui-workflow-packs](https://github.com/Hardonian/comfyui-workflow-packs) — ComfyUI workflow products
+- [content-repo](https://github.com/Hardonian/content-repo) — blog posts and email sequences
+
 ## License
 
 Each subproject retains its own license. See [mesh-edge/LICENSE](mesh-edge/LICENSE) and [pcap/LICENSE](pcap/LICENSE).
