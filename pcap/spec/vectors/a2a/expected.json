@@ -1,0 +1,85 @@
+{
+  "manifest": {
+    "format": "apcap",
+    "format_version": "1.0.0",
+    "capture_id": "vector_a2a",
+    "created_at": "2026-09-04T12:00:00Z",
+    "completed_at": "2026-09-04T12:00:00.08Z",
+    "agentpcap_version": "",
+    "host_metadata": {
+      "os": "",
+      "arch": ""
+    },
+    "capture_mode": "simulation",
+    "redaction_mode": "metadata_only",
+    "protocols_seen": null,
+    "event_count": 0,
+    "attachment_count": 0,
+    "hashes": null
+  },
+  "metadata": {
+    "title": "Agent-to-Agent Delegation Vector",
+    "total_duration_ms": 0,
+    "total_tokens": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "total_cost": 0,
+    "currency": "",
+    "agent_count": 0,
+    "model_count": 0,
+    "tool_count": 0,
+    "error_count": 0
+  },
+  "events": [
+    {
+      "id": "a2a_01",
+      "trace_id": "tr_a2a",
+      "timestamp": "2026-09-04T12:00:00Z",
+      "duration_ms": 30,
+      "type": "DELEGATION",
+      "protocol": "A2A",
+      "operation": "task/delegate",
+      "source": {
+        "name": "orchestrator",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "summarizer",
+        "kind": "agent"
+      },
+      "status": "OK",
+      "attributes": {
+        "a2a.delegation_chain": "orchestrator -\u003e summarizer",
+        "a2a.delegation_depth": 1,
+        "a2a.task_id": "task_sum_01"
+      },
+      "provenance": "PROTOCOL_PARSED"
+    },
+    {
+      "id": "a2a_02",
+      "trace_id": "tr_a2a",
+      "parent_id": "a2a_01",
+      "timestamp": "2026-09-04T12:00:00.035Z",
+      "duration_ms": 40,
+      "type": "A2A_RESPONSE",
+      "protocol": "A2A",
+      "operation": "task/result",
+      "source": {
+        "name": "summarizer",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "orchestrator",
+        "kind": "agent"
+      },
+      "status": "OK",
+      "attributes": {
+        "a2a.status": "completed",
+        "a2a.task_id": "task_sum_01"
+      },
+      "provenance": "PROTOCOL_PARSED"
+    }
+  ]
+}

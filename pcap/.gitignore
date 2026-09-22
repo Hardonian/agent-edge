@@ -1,0 +1,28 @@
+# Binaries & Packaging
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+agentpcap
+bin/
+dist/
+web/dist/
+
+# Temporary captures & reports
+*.apcap
+!examples/*.apcap
+!spec/vectors/**/*.apcap
+*.html
+!web/**/*.html
+
+# Node & Frontend dependencies
+node_modules/
+web/node_modules/
+.pnpm-store/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

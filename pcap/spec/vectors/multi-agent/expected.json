@@ -1,0 +1,106 @@
+{
+  "manifest": {
+    "format": "apcap",
+    "format_version": "1.0.0",
+    "capture_id": "vector_multi_agent",
+    "created_at": "2026-09-04T12:00:00Z",
+    "completed_at": "2026-09-04T12:00:00.5Z",
+    "agentpcap_version": "",
+    "host_metadata": {
+      "os": "",
+      "arch": ""
+    },
+    "capture_mode": "simulation",
+    "redaction_mode": "metadata_only",
+    "protocols_seen": null,
+    "event_count": 0,
+    "attachment_count": 0,
+    "hashes": null
+  },
+  "metadata": {
+    "title": "Multi-Agent Research \u0026 Procurement Flow",
+    "total_duration_ms": 0,
+    "total_tokens": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "total_cost": 0,
+    "currency": "",
+    "agent_count": 0,
+    "model_count": 0,
+    "tool_count": 0,
+    "error_count": 0
+  },
+  "events": [
+    {
+      "id": "ma_01",
+      "trace_id": "tr_ma",
+      "timestamp": "2026-09-04T12:00:00Z",
+      "duration_ms": 25,
+      "type": "A2A_REQUEST",
+      "protocol": "A2A",
+      "operation": "task/dispatch",
+      "source": {
+        "name": "planner",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "researcher",
+        "kind": "agent"
+      },
+      "status": "OK",
+      "provenance": "OBSERVED"
+    },
+    {
+      "id": "ma_02",
+      "trace_id": "tr_ma",
+      "parent_id": "ma_01",
+      "timestamp": "2026-09-04T12:00:00.03Z",
+      "duration_ms": 300,
+      "type": "MODEL_RESPONSE",
+      "protocol": "MODEL",
+      "operation": "gemini:gemini-1.5-pro",
+      "source": {
+        "name": "researcher",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "gemini-1.5-pro",
+        "kind": "model"
+      },
+      "status": "OK",
+      "tokens": {
+        "input_tokens": 1200,
+        "output_tokens": 350,
+        "total_tokens": 1550
+      },
+      "cost": {
+        "amount": 0.0035,
+        "currency": "USD",
+        "status": "ESTIMATED"
+      },
+      "provenance": "PROTOCOL_PARSED"
+    },
+    {
+      "id": "ma_03",
+      "trace_id": "tr_ma",
+      "parent_id": "ma_02",
+      "timestamp": "2026-09-04T12:00:00.34Z",
+      "duration_ms": 80,
+      "type": "TOOL_CALL",
+      "protocol": "TOOL",
+      "operation": "tool:store_findings",
+      "source": {
+        "name": "researcher",
+        "kind": "agent"
+      },
+      "destination": {
+        "name": "storage-system",
+        "kind": "tool"
+      },
+      "status": "OK",
+      "provenance": "OBSERVED"
+    }
+  ]
+}

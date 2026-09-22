@@ -1,0 +1,56 @@
+{
+  "manifest": {
+    "format": "apcap",
+    "format_version": "1.0.0",
+    "capture_id": "vector_minimal",
+    "created_at": "2026-09-04T12:00:00Z",
+    "completed_at": "2026-09-04T12:00:00.01Z",
+    "agentpcap_version": "",
+    "host_metadata": {
+      "os": "",
+      "arch": ""
+    },
+    "capture_mode": "simulation",
+    "redaction_mode": "metadata_only",
+    "protocols_seen": null,
+    "event_count": 0,
+    "attachment_count": 0,
+    "hashes": null
+  },
+  "metadata": {
+    "title": "Minimal Single-Event Vector",
+    "total_duration_ms": 0,
+    "total_tokens": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0
+    },
+    "total_cost": 0,
+    "currency": "",
+    "agent_count": 0,
+    "model_count": 0,
+    "tool_count": 0,
+    "error_count": 0
+  },
+  "events": [
+    {
+      "id": "ev_001",
+      "trace_id": "tr_001",
+      "timestamp": "2026-09-04T12:00:00Z",
+      "duration_ms": 10,
+      "type": "AGENT_INVOKE",
+      "protocol": "A2A",
+      "operation": "ping",
+      "source": {
+        "name": "client",
+        "kind": "client"
+      },
+      "destination": {
+        "name": "agent-echo",
+        "kind": "agent"
+      },
+      "status": "OK",
+      "provenance": "OBSERVED"
+    }
+  ]
+}
